@@ -58,6 +58,23 @@ class Ship(object):
             other.die()
 
 
+class Shot(Ship):
+    def __init__(self,dx,dy,enemy):
+        super(Shot,self).__init__('gfx/player-shot.png')
+        self.dx = dx
+        self.dy = dy
+        self.enemy = enemy
+
+    def logic(self):
+        if self.y <= -self.h or self.y >= SCREEN_HEIGHT + self.h:
+            self.die()
+            return
+        self.move(self.dx,self.dy)
+
+    def die(self):
+        main.shots.remove(self)
+
+
 class Enemy(Ship):
     dx = 0
     dy = 0
@@ -118,10 +135,13 @@ class Player(Ship):
             if (main.tick - self.last_shot > 10):
                 self.last_shot = main.tick
                 main.lighting.add_flare(Flare(64,16))
+                shot = Shot(0,-5,False)
+                shot.move_to(self.x + self.w/2 - shot.x/2, self.y - shot.h)
+                main.shots.append(shot)
 
     def die(self):
         print "You're dead."
-#        main.shutdown()
+        main.shutdown()
             
 
 class Background(object):
@@ -210,6 +230,7 @@ class Main(object):
         self.player = Player()
         self.player.move(SCREEN_WIDTH/2,SCREEN_HEIGHT*0.7)
         self.enemies = []
+        self.shots = []
 
     def shutdown(self):
         self.running = False
@@ -244,9 +265,20 @@ class Main(object):
                enemy.move_to(randint(0,SCREEN_WIDTH-1),-enemy.h)
                self.enemies.append(enemy)
 
+        for shot in self.shots:
+            if shot.enemy:
+                shot.collide(self.player)
+            else:
+                for enemy in self.enemies:
+                    shot.collide(enemy)
         for enemy in self.enemies:
             enemy.collide(self.player)
+
+        for shot in self.shots:
+            shot.logic()
+        for enemy in self.enemies:
             enemy.logic()
+
         self.player.poll_keys()
 
     def draw(self):
@@ -254,6 +286,8 @@ class Main(object):
         for enemy in self.enemies:
             enemy.blit(self.screen)
         self.player.blit(self.screen)
+        for shot in self.shots:
+            shot.blit(self.screen)
         self.lighting.blit(self.screen)
 
 main = Main()
