@@ -61,16 +61,10 @@ class Player(Ship):
             dy += speed
         self.move(dx,dy)
         
-    def key_pushed(self,key):
-        if key == pygame.K_LEFT:
-            self.move(-1,0)
-        elif key == pygame.K_RIGHT:
-            self.move(1,0)
-        elif key == pygame.K_UP:
-            self.move(0,-1)
-        elif key == pygame.K_DOWN:
-            self.move(0,1)
-
+    def key_down(self,key):
+        if key == pygame.K_SPACE:
+            main.lighting.flash(randint(0,200));
+            
 
 class Background(object):
     scroll_speed = 0.3
@@ -104,6 +98,32 @@ class Background(object):
             self.back = self.create_screen()
 
 
+class Lighting(object):
+    brightness = 0
+    cooldown = 5
+    min_light = 100
+
+    def __init__(self):
+        self.sur_light = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT)).convert()
+        self.sur_light.fill((255,255,255))
+        self.sur_shadow = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT)).convert()
+
+    def flash(self,amount):
+        self.brightness += amount
+
+    def blit(self,target):
+        self.brightness -= self.cooldown;
+        if self.brightness < 0:
+            self.brightness = 0
+        light = min(255,int(self.brightness))
+        shadow = 255-light
+
+        self.sur_shadow.set_alpha(shadow)
+        target.blit(self.sur_shadow,(0,0))
+        self.sur_light.set_alpha(light)
+        target.blit(self.sur_light,(0,0))  
+
+
 class Main(object):
     def __init__(self):
         pygame.init()
@@ -111,9 +131,12 @@ class Main(object):
         self.display = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT),pygame.DOUBLEBUF)
         self.clock = pygame.time.Clock()
         self.fps = FPS
+        self.tick = 0
 
         self.background = Background()
+        self.lighting = Lighting()
         self.player = Player()
+        self.player.move(SCREEN_WIDTH/2,SCREEN_HEIGHT*0.7)
 
 
     def run(self):
@@ -125,7 +148,10 @@ class Main(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-            self.player.poll_keys()
+                    else:
+                        self.player.key_down(event.key)
+            self.logic()
+            self.tick += 1
             self.clock.tick(self.fps)
             pygame.display.flip()
             
@@ -134,9 +160,13 @@ class Main(object):
             self.screen = pygame.transform.scale(self.screen,(DISPLAY_WIDTH,DISPLAY_HEIGHT))
             self.display.blit(self.screen,(0,0))
 
+    def logic(self):
+        self.player.poll_keys()
+
     def draw(self):
         self.background.blit(self.screen)
         self.player.blit(self.screen)
+        self.lighting.blit(self.screen)
 
-
-Main().run()
+main = Main()
+main.run()
