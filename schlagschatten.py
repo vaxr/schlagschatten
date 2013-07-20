@@ -12,8 +12,8 @@ import subprocess
 
 FPS = 30
 ZOOM = 4
-SCREEN_WIDTH = 240
-SCREEN_HEIGHT = 180
+SCREEN_WIDTH = 320
+SCREEN_HEIGHT = 200
 DISPLAY_WIDTH = SCREEN_WIDTH * ZOOM
 DISPLAY_HEIGHT = SCREEN_HEIGHT * ZOOM
 
@@ -314,9 +314,9 @@ class Main(object):
                 self.shutdown()
 
     def logic(self):
-        max_enemies = 6
+        max_enemies = 8
         if len(self.enemies) < max_enemies:
-            enemy_appear_chance = 0.1 * 0.5**len(self.enemies)
+            enemy_appear_chance = 0.15 * 0.5**len(self.enemies)
             if uniform(0,1) <= enemy_appear_chance:
                enemy = EnemyOne()
                enemy.move_to(randint(0,SCREEN_WIDTH-1),-enemy.h)
