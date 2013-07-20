@@ -184,6 +184,7 @@ class Player(Ship):
     def die(self):
 #        self.sound.play()
         self.dead = True
+        main.lighting.flash(512)
         print "You're dead."
         main.shutdown_in(FPS * 4)
 #        main.shutdown_in(self.sound.get_length() * FPS)
