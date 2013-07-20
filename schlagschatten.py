@@ -85,7 +85,8 @@ class Shot(Ship):
         self.move(self.dx,self.dy)
 
     def die(self):
-        main.shots.remove(self)
+        if self in main.shots:
+            main.shots.remove(self)
 
 
 class Enemy(Ship):
@@ -105,6 +106,11 @@ class Enemy(Ship):
         self.sound.play()
 
     def logic(self):
+        if (self.x <= 0 and self.dx < 0) or (self.x >= SCREEN_WIDTH and self.dx > 0):
+            self.dx = -self.dx
+        if (self.y <= 0 and self.dy < 0) or (self.y >= SCREEN_HEIGHT and self.dy > 0):
+            self.dy = -self.dy
+
         self.dx += uniform(0.0,self.xvar) - self.xvar/2
         self.dy += uniform(0.0,self.yvar) - self.yvar/2
         if self.dx < -self.speed:
@@ -314,7 +320,7 @@ class Main(object):
                 self.shutdown()
 
     def logic(self):
-        max_enemies = 8
+        max_enemies = 7
         if len(self.enemies) < max_enemies:
             enemy_appear_chance = 0.15 * 0.5**len(self.enemies)
             if uniform(0,1) <= enemy_appear_chance:
