@@ -112,7 +112,7 @@ class Enemy(Ship):
         if main.tick > self.next_shot:
             self.next_shot = main.tick + 30 + randint(0,70)
             main.lighting.add_flare(Flare(24,8))
-            shot_speed = 1.5
+            shot_speed = 2.0
             dx = main.player.x - self.x
             dy = main.player.y - self.y
             s = (dx**2 + dy**2)**0.5
