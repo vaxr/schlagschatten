@@ -103,6 +103,7 @@ class Enemy(Ship):
     def die(self):
         main.enemies.remove(self)
         main.lighting.flash(255)
+        main.score += 1
         self.sound.play()
 
     def logic(self):
@@ -260,10 +261,13 @@ class Lighting(object):
 
 
 class Main(object):
+    score = 0
+
     def __init__(self):
         pygame.init()
         pygame.mixer.init()
         pygame.display.set_caption('Schlagschatten')
+        self.font = pygame.font.Font(None,20)
         self.display = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT),pygame.DOUBLEBUF)
         self.clock = pygame.time.Clock()
         self.fps = FPS
@@ -355,6 +359,10 @@ class Main(object):
         for shot in self.shots:
             shot.blit(self.screen)
         self.lighting.blit(self.screen)
+        text = self.font.render("%s" % self.score, True, (255,255,255))
+        self.screen.blit(text,(4,4))
+#        self.screen.blit(text,(SREEN_WIDTH-128,16))
+
 
 main = Main()
 main.run()
