@@ -3,6 +3,7 @@
 #import sys
 import pygame
 from random import randint
+from random import uniform
 
 
 FPS = 30
@@ -15,6 +16,7 @@ DISPLAY_HEIGHT = SCREEN_HEIGHT * ZOOM
 
 
 class Ship(object):
+    speed = 3
     x = 0
     y = 0
 
@@ -29,17 +31,66 @@ class Ship(object):
     def move(self,dx,dy):
         self.move_to(self.x+dx,self.y+dy)
 
-    def move_to(self,x,y):
-        if (x < 0):
-            x = 0
-        elif (x > SCREEN_WIDTH - self.w):
-            x = SCREEN_WIDTH - self.w
-        if (y < 0):
-            y = 0
-        elif (y > SCREEN_HEIGHT - self.h):
-            y = SCREEN_HEIGHT - self.h
+    def move_to(self,x,y,legal=True):
+        if legal:
+            if (x < -self.w):
+                x = -self.w
+            elif (x > SCREEN_WIDTH):
+                x = SCREEN_WIDTH
+            if (y < -self.h):
+                y = -self.h
+            elif (y > SCREEN_HEIGHT):
+                y = SCREEN_HEIGHT
         self.x = x
         self.y = y
+
+    def collides(self,other):
+        dx = self.x - other.x
+        dy = self.y - other.y
+        if (dx > 0 and dx < other.w) or (dx < 0 and abs(dx) < self.w):
+            if (dy > 0 and dy < other.h) or (dy < 0 and abs(dy) < self.h):
+                return True
+        return False
+
+    def collide(self,other):
+        if self.collides(other):
+            self.die()
+            other.die()
+
+
+class Enemy(Ship):
+    dx = 0
+    dy = 0
+    xvar = 0.5
+    yvar = 0.2
+
+    def __init__(self,gfx_file):
+        super(Enemy,self).__init__(gfx_file)
+
+    def die(self):
+        main.enemies.remove(self)
+        main.lighting.flash(255)
+
+    def logic(self):
+        self.dx += uniform(0.0,self.xvar) - self.xvar/2
+        self.dy += uniform(0.0,self.yvar) - self.yvar/2
+        if self.dx < -self.speed:
+            self.dx = -self.speed
+        elif self.dx > self.speed:
+            self.dx = self.speed
+        if self.dy < -self.speed:
+            self.dy = -self.speed
+        elif self.dy > self.speed:
+            self.dy = self.speed
+        if self.y < 0:
+            self.dy = 1
+
+        self.move(self.dx,self.dy)
+
+
+class EnemyOne(Enemy):
+    def __init__(self):
+        super(EnemyOne,self).__init__('gfx/enemy1.png')
 
 
 class Player(Ship):
@@ -47,23 +98,26 @@ class Player(Ship):
         super(Player,self).__init__('gfx/player.png')     
 
     def poll_keys(self):
-        speed = 3
         dx = 0
         dy = 0
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            dx -= speed
+            dx -= self.speed
         if keys[pygame.K_RIGHT]:
-            dx += speed
+            dx += self.speed
         if keys[pygame.K_UP]:
-            dy -= speed
+            dy -= self.speed
         if keys[pygame.K_DOWN]:
-            dy += speed
+            dy += self.speed
         self.move(dx,dy)
         
     def key_down(self,key):
         if key == pygame.K_SPACE:
             main.lighting.flash(randint(0,200));
+
+    def die(self):
+        print "You're dead."
+#        main.shutdown()
             
 
 class Background(object):
@@ -137,17 +191,20 @@ class Main(object):
         self.lighting = Lighting()
         self.player = Player()
         self.player.move(SCREEN_WIDTH/2,SCREEN_HEIGHT*0.7)
+        self.enemies = []
 
+    def shutdown(self):
+        self.running = False
 
     def run(self):
-        running = True
-        while running:
+        self.running = True
+        while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    self.running = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        running = False
+                        self.running = False
                     else:
                         self.player.key_down(event.key)
             self.logic()
@@ -161,10 +218,23 @@ class Main(object):
             self.display.blit(self.screen,(0,0))
 
     def logic(self):
+        max_enemies = 5
+        if len(self.enemies) < max_enemies:
+            enemy_appear_chance = 0.1 * 0.5**len(self.enemies)
+            if uniform(0,1) <= enemy_appear_chance:
+               enemy = EnemyOne()
+               enemy.move_to(randint(0,SCREEN_WIDTH-1),-enemy.h)
+               self.enemies.append(enemy)
+
+        for enemy in self.enemies:
+            enemy.collide(self.player)
+            enemy.logic()
         self.player.poll_keys()
 
     def draw(self):
         self.background.blit(self.screen)
+        for enemy in self.enemies:
+            enemy.blit(self.screen)
         self.player.blit(self.screen)
         self.lighting.blit(self.screen)
 
