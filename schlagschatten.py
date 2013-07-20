@@ -60,7 +60,11 @@ class Ship(object):
 
 class Shot(Ship):
     def __init__(self,dx,dy,enemy):
-        super(Shot,self).__init__('gfx/player-shot.png')
+        if (enemy):
+            gfx = 'gfx/enemy1-shot.png'
+        else:
+            gfx = 'gfx/player-shot.png'
+        super(Shot,self).__init__(gfx)
         self.dx = dx
         self.dy = dy
         self.enemy = enemy
@@ -80,6 +84,7 @@ class Enemy(Ship):
     dy = 0
     xvar = 0.5
     yvar = 0.2
+    next_shot = 0
 
     def __init__(self,gfx_file):
         super(Enemy,self).__init__(gfx_file)
@@ -101,9 +106,15 @@ class Enemy(Ship):
             self.dy = self.speed
         if self.y < 0:
             self.dy = 1
-
         self.move(self.dx,self.dy)
-
+        
+        if main.tick > self.next_shot:
+            self.next_shot = main.tick + 30 + randint(0,70)
+            main.lighting.add_flare(Flare(24,8))
+            shot = Shot(0,1.5,True)
+            shot.move_to(self.x + self.w/2 - shot.x/2, self.y + self.h)
+            main.shots.append(shot)
+        
 
 class EnemyOne(Enemy):
     def __init__(self):
