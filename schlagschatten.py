@@ -63,12 +63,17 @@ class Shot(Ship):
     def __init__(self,dx,dy,enemy):
         if (enemy):
             gfx = 'gfx/enemy1-shot.png'
+            self.sound = pygame.mixer.Sound('sfx/slime.wav')
         else:
             gfx = 'gfx/player-shot.png'
+            self.sound = pygame.mixer.Sound('sfx/cannon.wav')
         super(Shot,self).__init__(gfx)
         self.dx = dx
         self.dy = dy
         self.enemy = enemy
+
+    def play_sound(self):
+        self.sound.play()
 
     def logic(self):
         if self.y <= -self.h or self.y >= SCREEN_HEIGHT + self.h or self.x <= -self.w or self.x >= SCREEN_WIDTH :
@@ -89,10 +94,12 @@ class Enemy(Ship):
 
     def __init__(self,gfx_file):
         super(Enemy,self).__init__(gfx_file)
+        self.sound = pygame.mixer.Sound('sfx/enemy-explode.wav')
 
     def die(self):
         main.enemies.remove(self)
         main.lighting.flash(255)
+        self.sound.play()
 
     def logic(self):
         self.dx += uniform(0.0,self.xvar) - self.xvar/2
@@ -109,8 +116,10 @@ class Enemy(Ship):
             self.dy = 1
         self.move(self.dx,self.dy)
         
+        min_shot_interval = 20
+        max_shot_interval = 200
         if main.tick > self.next_shot:
-            self.next_shot = main.tick + 30 + randint(0,70)
+            self.next_shot = main.tick + randint(min_shot_interval,max_shot_interval)
             main.lighting.add_flare(Flare(24,8))
             shot_speed = 2.0
             dx = main.player.x - self.x
@@ -120,6 +129,7 @@ class Enemy(Ship):
             sy = dy / s * shot_speed / pi
             shot = Shot(sx,sy,True)
             shot.move_to(self.x + self.w/2 - shot.x/2, self.y + self.h)
+            shot.play_sound()
             main.shots.append(shot)
         
 
@@ -130,9 +140,11 @@ class EnemyOne(Enemy):
 
 class Player(Ship):
     last_shot = 0
+    dead = False
 
     def __init__(self):
         super(Player,self).__init__('gfx/player.png')     
+        self.sound = pygame.mixer.Sound('sfx/player-explode.wav')
 
     def poll_keys(self):
         dx = 0
@@ -155,11 +167,15 @@ class Player(Ship):
                 main.lighting.add_flare(Flare(64,16))
                 shot = Shot(0,-5,False)
                 shot.move_to(self.x + self.w/2 - shot.x/2, self.y - shot.h)
+                shot.play_sound()
                 main.shots.append(shot)
 
     def die(self):
+#        self.sound.play()
+        self.dead = True
         print "You're dead."
-        main.shutdown()
+        main.shutdown_in(FPS * 4)
+#        main.shutdown_in(self.sound.get_length() * FPS)
             
 
 class Background(object):
@@ -237,12 +253,13 @@ class Lighting(object):
 class Main(object):
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
         pygame.display.set_caption('Schlagschatten')
         self.display = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT),pygame.DOUBLEBUF)
         self.clock = pygame.time.Clock()
         self.fps = FPS
         self.tick = 0
-
+        self.shutdown_tick = 0
         self.background = Background()
         self.lighting = Lighting()
         self.player = Player()
@@ -250,8 +267,12 @@ class Main(object):
         self.enemies = []
         self.shots = []
 
+    def shutdown_in(self,frames):
+        self.shutdown_tick = self.tick + frames
+
     def shutdown(self):
         self.running = False
+        pygame.mixer.quit()
 
     def run(self):
         self.running = True
@@ -274,6 +295,9 @@ class Main(object):
             self.screen = pygame.transform.scale(self.screen,(DISPLAY_WIDTH,DISPLAY_HEIGHT))
             self.display.blit(self.screen,(0,0))
 
+            if self.shutdown_tick > 0 and self.tick > self.shutdown_tick:
+                self.shutdown()
+
     def logic(self):
         max_enemies = 5
         if len(self.enemies) < max_enemies:
@@ -284,26 +308,29 @@ class Main(object):
                self.enemies.append(enemy)
 
         for shot in self.shots:
-            if shot.enemy:
+            if shot.enemy and not self.player.dead:
                 shot.collide(self.player)
             else:
                 for enemy in self.enemies:
                     shot.collide(enemy)
-        for enemy in self.enemies:
-            enemy.collide(self.player)
+        if not self.player.dead:
+            for enemy in self.enemies:
+                enemy.collide(self.player)
 
         for shot in self.shots:
             shot.logic()
         for enemy in self.enemies:
             enemy.logic()
 
-        self.player.poll_keys()
+        if not self.player.dead:
+            self.player.poll_keys()
 
     def draw(self):
         self.background.blit(self.screen)
         for enemy in self.enemies:
             enemy.blit(self.screen)
-        self.player.blit(self.screen)
+        if not self.player.dead:
+            self.player.blit(self.screen)
         for shot in self.shots:
             shot.blit(self.screen)
         self.lighting.blit(self.screen)
