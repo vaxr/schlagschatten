@@ -45,9 +45,22 @@ class Player(Ship):
     def __init__(self):
         super(Player,self).__init__('gfx/player.png')     
 
-    def key_pushed(self,key):
+    def poll_keys(self):
+        speed = 3
         dx = 0
         dy = 0
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            dx -= speed
+        if keys[pygame.K_RIGHT]:
+            dx += speed
+        if keys[pygame.K_UP]:
+            dy -= speed
+        if keys[pygame.K_DOWN]:
+            dy += speed
+        self.move(dx,dy)
+        
+    def key_pushed(self,key):
         if key == pygame.K_LEFT:
             self.move(-1,0)
         elif key == pygame.K_RIGHT:
@@ -77,8 +90,7 @@ class Main(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    else:
-                        self.player.key_pushed(event.key)
+            self.player.poll_keys()
             self.clock.tick(self.fps)
             pygame.display.flip()
             
