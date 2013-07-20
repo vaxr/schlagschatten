@@ -4,6 +4,7 @@
 import pygame
 from random import randint
 from random import uniform
+from math import pi
 
 
 FPS = 30
@@ -70,7 +71,7 @@ class Shot(Ship):
         self.enemy = enemy
 
     def logic(self):
-        if self.y <= -self.h or self.y >= SCREEN_HEIGHT + self.h:
+        if self.y <= -self.h or self.y >= SCREEN_HEIGHT + self.h or self.x <= -self.w or self.x >= SCREEN_WIDTH :
             self.die()
             return
         self.move(self.dx,self.dy)
@@ -111,7 +112,13 @@ class Enemy(Ship):
         if main.tick > self.next_shot:
             self.next_shot = main.tick + 30 + randint(0,70)
             main.lighting.add_flare(Flare(24,8))
-            shot = Shot(0,1.5,True)
+            shot_speed = 1.5
+            dx = main.player.x - self.x
+            dy = main.player.y - self.y
+            s = (dx**2 + dy**2)**0.5
+            sx = dx / s * shot_speed / pi
+            sy = dy / s * shot_speed / pi
+            shot = Shot(sx,sy,True)
             shot.move_to(self.x + self.w/2 - shot.x/2, self.y + self.h)
             main.shots.append(shot)
         
