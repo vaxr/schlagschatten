@@ -126,21 +126,22 @@ class Enemy(Ship):
             self.dy = 1
         self.move(self.dx,self.dy)
         
-        min_shot_interval = 20
-        max_shot_interval = 200
-        if main.tick > self.next_shot:
-            self.next_shot = main.tick + randint(min_shot_interval,max_shot_interval)
-            main.lighting.add_flare(Flare(24,8))
-            shot_speed = 2.0
-            dx = main.player.x - self.x
-            dy = main.player.y - self.y
-            s = (dx**2 + dy**2)**0.5
-            sx = dx / s * shot_speed / pi
-            sy = dy / s * shot_speed / pi
-            shot = Shot(sx,sy,True)
-            shot.move_to(self.x + self.w/2 - shot.x/2, self.y + self.h)
-            shot.play_sound()
-            main.shots.append(shot)
+        if not main.player.dead:
+            min_shot_interval = 20
+            max_shot_interval = 200
+            if main.tick > self.next_shot:
+                self.next_shot = main.tick + randint(min_shot_interval,max_shot_interval)
+                main.lighting.add_flare(Flare(24,8))
+                shot_speed = 2.0
+                dx = main.player.x - self.x
+                dy = main.player.y - self.y
+                s = (dx**2 + dy**2)**0.5
+                sx = dx / s * shot_speed / pi
+                sy = dy / s * shot_speed / pi
+                shot = Shot(sx,sy,True)
+                shot.move_to(self.x + self.w/2 - shot.x/2, self.y + self.h)
+                shot.play_sound()
+                main.shots.append(shot)
         
 
 class EnemyOne(Enemy):
@@ -332,13 +333,13 @@ class Main(object):
                enemy.move_to(randint(0,SCREEN_WIDTH-1),-enemy.h)
                self.enemies.append(enemy)
 
-        for shot in self.shots:
-            if shot.enemy and not self.player.dead:
-                shot.collide(self.player)
-            else:
-                for enemy in self.enemies:
-                    shot.collide(enemy)
         if not self.player.dead:
+            for shot in self.shots:
+                if shot.enemy:
+                    shot.collide(self.player)
+                else:
+                    for enemy in self.enemies:
+                        shot.collide(enemy)
             for enemy in self.enemies:
                 enemy.collide(self.player)
 
