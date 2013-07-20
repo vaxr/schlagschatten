@@ -1,10 +1,13 @@
 #!/usr/bin/env python2
 
-#import sys
+import sys
+import os
 import pygame
 from random import randint
 from random import uniform
+from random import choice
 from math import pi
+import subprocess
 
 
 FPS = 30
@@ -266,12 +269,24 @@ class Main(object):
         self.player.move(SCREEN_WIDTH/2,SCREEN_HEIGHT*0.7)
         self.enemies = []
         self.shots = []
+        self.play_music()
+
+    def play_music(self):
+        files = ['music/Commando.sid','music/After_the_War.sid']
+#        file = choice(files)
+        file = files[1]
+        command = "sidplay2 %s" % file
+        self.sidplay = subprocess.Popen("exec " + command, stdout=subprocess.PIPE,shell=True)
+#        self.sidplay = subprocess.Popen(['sidplay2',file])
+#        self.sidplay = subprocess.Popen(['sidplay2',file],stdout=subprocess.PIPE,shell=True,preexec_fn=os.setsid)
 
     def shutdown_in(self,frames):
         self.shutdown_tick = self.tick + frames
 
     def shutdown(self):
         self.running = False
+        self.sidplay.kill()
+#        os.killpg(self.sidplay.pid,signal.SIGTERM)
         pygame.mixer.quit()
 
     def run(self):
@@ -279,11 +294,11 @@ class Main(object):
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.running = False
+                    self.shutdown()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        self.running = False
-                    else:
+                        self.shutdown()
+                    elif not self.player.dead:
                         self.player.key_down(event.key)
             self.logic()
             self.tick += 1
@@ -299,7 +314,7 @@ class Main(object):
                 self.shutdown()
 
     def logic(self):
-        max_enemies = 5
+        max_enemies = 6
         if len(self.enemies) < max_enemies:
             enemy_appear_chance = 0.1 * 0.5**len(self.enemies)
             if uniform(0,1) <= enemy_appear_chance:
