@@ -2,6 +2,7 @@
 
 #import sys
 import pygame
+from random import randint
 
 
 FPS = 30
@@ -71,6 +72,38 @@ class Player(Ship):
             self.move(0,1)
 
 
+class Background(object):
+    scroll_speed = 0.3
+    yoff = 0
+
+    def __init__(self):
+        self.front = self.create_screen()
+        self.back = self.create_screen()
+
+    def create_screen(self):
+        min_stars = int(SCREEN_WIDTH * SCREEN_HEIGHT / 1000)
+        num_stars = randint(min_stars, int(min_stars * 1.2))
+        min_bright = 64
+        max_bright = 196
+        screen = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT)).convert()
+        screen.fill((16,8,32))
+        pixels = pygame.PixelArray(screen)
+        for t in range (0,num_stars):
+            color = pygame.Color(randint(min_bright,max_bright),randint(min_bright,max_bright),randint(min_bright,max_bright),0)
+            pixels[randint(0,SCREEN_WIDTH-1),randint(0,SCREEN_HEIGHT-1)] = color
+        return screen
+
+    def blit(self,target):
+        target.blit(self.back,(0,int(self.yoff)-self.back.get_height()))
+        target.blit(self.front,(0,int(self.yoff)))
+
+        self.yoff += self.scroll_speed
+        if self.yoff >= self.front.get_height():
+            self.yoff = 0
+            self.front = self.back
+            self.back = self.create_screen()
+
+
 class Main(object):
     def __init__(self):
         pygame.init()
@@ -78,6 +111,8 @@ class Main(object):
         self.display = pygame.display.set_mode((DISPLAY_WIDTH,DISPLAY_HEIGHT),pygame.DOUBLEBUF)
         self.clock = pygame.time.Clock()
         self.fps = FPS
+
+        self.background = Background()
         self.player = Player()
 
 
@@ -100,7 +135,7 @@ class Main(object):
             self.display.blit(self.screen,(0,0))
 
     def draw(self):
-        self.screen.fill((255,0,0))
+        self.background.blit(self.screen)
         self.player.blit(self.screen)
 
 
