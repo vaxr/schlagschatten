@@ -94,6 +94,8 @@ class EnemyOne(Enemy):
 
 
 class Player(Ship):
+    last_shot = 0
+
     def __init__(self):
         super(Player,self).__init__('gfx/player.png')     
 
@@ -113,7 +115,9 @@ class Player(Ship):
         
     def key_down(self,key):
         if key == pygame.K_SPACE:
-            main.lighting.flash(randint(0,200));
+            if (main.tick - self.last_shot > 10):
+                self.last_shot = main.tick
+                main.lighting.add_flare(Flare(64,16))
 
     def die(self):
         print "You're dead."
@@ -152,10 +156,17 @@ class Background(object):
             self.back = self.create_screen()
 
 
+class Flare(object):
+    def __init__(self,brightness,cooldown):
+        self.brightness = brightness
+        self.cooldown = cooldown
+
+    def cool(self):
+        self.brightness -= self.cooldown
+
+
 class Lighting(object):
-    brightness = 0
-    cooldown = 5
-    min_light = 100
+    flares = []
 
     def __init__(self):
         self.sur_light = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT)).convert()
@@ -163,13 +174,20 @@ class Lighting(object):
         self.sur_shadow = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT)).convert()
 
     def flash(self,amount):
-        self.brightness += amount
+        self.add_flare(Flare(amount,5))
+
+    def add_flare(self,flare):
+        self.flares.append(flare)
 
     def blit(self,target):
-        self.brightness -= self.cooldown;
-        if self.brightness < 0:
-            self.brightness = 0
-        light = min(255,int(self.brightness))
+        brightness = 0
+        for flare in self.flares:
+            if flare.brightness > 0:
+                brightness += flare.brightness
+                flare.cool()
+            else:
+                self.flares.remove(flare)
+        light = min(255,int(brightness))
         shadow = 255-light
 
         self.sur_shadow.set_alpha(shadow)
