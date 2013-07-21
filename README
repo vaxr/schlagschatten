@@ -1,0 +1,33 @@
+SYNOPSIS
+
+You are a space fighter pilot in a hopeless struggle against the alien
+invaders. Your sensory systems are damaged, and the only source of
+light you have is the battle itself. How many alien fighters can you
+take with you?
+
+
+INSTALLATION
+
+The game requires Python2 and pygame. It was built with Python 2.7.5
+and might run on lower versions. For the music to work, you need to
+have sidplay2 installed and in your path.
+
+The game must be run from its root directory.
+
+Note that no efforts were made to make the game run on any other than
+the development machine.
+
+
+BACKGROUND
+
+The game was made in 8 hours for the Berlin Mini Game Jam 07/2013 [1],
+and is presented here virtually unchanged, for general amusement. The
+code is a mess and there are currently no plans of improving the game.
+
+The idea is based on 3/4 of the jam's themes:
+- light and shadow
+- retro
+- pixel art
+
+
+[1] https://www.facebook.com/events/396072730505667/

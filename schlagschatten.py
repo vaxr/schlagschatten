@@ -182,7 +182,7 @@ class Player(Ship):
                 main.shots.append(shot)
 
     def die(self):
-#        self.sound.play()
+        self.sound.play()
         self.dead = True
         main.lighting.flash(512)
         print "You're dead."
