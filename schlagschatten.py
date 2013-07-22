@@ -177,7 +177,7 @@ class Player(Ship):
                 self.last_shot = main.tick
                 main.lighting.add_flare(Flare(64,16))
                 shot = Shot(0,-5,False)
-                shot.move_to(self.x + self.w/2 - shot.x/2, self.y - shot.h)
+                shot.move_to(self.x + self.w/2 - shot.w/2, self.y - shot.h)
                 shot.play_sound()
                 main.shots.append(shot)
 
