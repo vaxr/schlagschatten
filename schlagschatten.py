@@ -17,6 +17,10 @@ SCREEN_HEIGHT = 200
 DISPLAY_WIDTH = SCREEN_WIDTH * ZOOM
 DISPLAY_HEIGHT = SCREEN_HEIGHT * ZOOM
 
+GFX_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'gfx'))
+SFX_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sfx'))
+MUSIC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'music'))
+
 
 
 class Ship(object):
@@ -65,11 +69,11 @@ class Ship(object):
 class Shot(Ship):
     def __init__(self,dx,dy,enemy):
         if (enemy):
-            gfx = 'gfx/enemy1-shot.png'
-            self.sound = pygame.mixer.Sound('sfx/slime.wav')
+            gfx = GFX_DIR+'/enemy1-shot.png'
+            self.sound = pygame.mixer.Sound(SFX_DIR+'/slime.wav')
         else:
-            gfx = 'gfx/player-shot.png'
-            self.sound = pygame.mixer.Sound('sfx/cannon.wav')
+            gfx = GFX_DIR+'/player-shot.png'
+            self.sound = pygame.mixer.Sound(SFX_DIR+'/cannon.wav')
         super(Shot,self).__init__(gfx)
         self.dx = dx
         self.dy = dy
@@ -98,7 +102,7 @@ class Enemy(Ship):
 
     def __init__(self,gfx_file):
         super(Enemy,self).__init__(gfx_file)
-        self.sound = pygame.mixer.Sound('sfx/enemy-explode.wav')
+        self.sound = pygame.mixer.Sound(SFX_DIR+'/enemy-explode.wav')
 
     def die(self):
         main.enemies.remove(self)
@@ -146,7 +150,7 @@ class Enemy(Ship):
 
 class EnemyOne(Enemy):
     def __init__(self):
-        super(EnemyOne,self).__init__('gfx/enemy1.png')
+        super(EnemyOne,self).__init__(GFX_DIR+'/enemy1.png')
 
 
 class Player(Ship):
@@ -154,8 +158,8 @@ class Player(Ship):
     dead = False
 
     def __init__(self):
-        super(Player,self).__init__('gfx/player.png')     
-        self.sound = pygame.mixer.Sound('sfx/player-explode.wav')
+        super(Player,self).__init__(GFX_DIR+'/player.png')     
+        self.sound = pygame.mixer.Sound(SFX_DIR+'/player-explode.wav')
 
     def poll_keys(self):
         dx = 0
@@ -284,9 +288,9 @@ class Main(object):
         self.play_music()
 
     def play_music(self):
-        files = ['music/Commando.sid','music/After_the_War.sid']
+        files = ['Commando.sid','After_the_War.sid']
 #        file = choice(files)
-        file = files[1]
+        file = MUSIC_DIR+'/'+files[1]
         command = "sidplay2 %s" % file
         self.sidplay = subprocess.Popen("exec " + command, stdout=subprocess.PIPE,shell=True)
 #        self.sidplay = subprocess.Popen(['sidplay2',file])
