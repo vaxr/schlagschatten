@@ -289,20 +289,16 @@ class Main(object):
 
     def play_music(self):
         files = ['Commando.sid','After_the_War.sid']
-#        file = choice(files)
         file = MUSIC_DIR+'/'+files[1]
-        command = "sidplay2 %s" % file
-        self.sidplay = subprocess.Popen("exec " + command, stdout=subprocess.PIPE,shell=True)
-#        self.sidplay = subprocess.Popen(['sidplay2',file])
-#        self.sidplay = subprocess.Popen(['sidplay2',file],stdout=subprocess.PIPE,shell=True,preexec_fn=os.setsid)
+        command = "sidplay2 >/dev/null 2>/dev/null %s" % file
+        self.sidplay = subprocess.Popen("exec " + command, shell=True)
 
     def shutdown_in(self,frames):
         self.shutdown_tick = self.tick + frames
 
     def shutdown(self):
         self.running = False
-        self.sidplay.kill()
-#        os.killpg(self.sidplay.pid,signal.SIGTERM)
+        self.sidplay.terminate()
         pygame.mixer.quit()
 
     def run(self):
