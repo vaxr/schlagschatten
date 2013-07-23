@@ -63,7 +63,10 @@ class Ship(object):
     def collide(self,other):
         if self.collides(other):
             self.die()
-            other.die()
+            if isinstance(other,Ship):
+                other.die()
+            elif isinstance(other,Box):
+                main.player.die()
 
 
 class Shot(Ship):
@@ -153,6 +156,13 @@ class EnemyOne(Enemy):
         super(EnemyOne,self).__init__(GFX_DIR+'/enemy1.png')
 
 
+class Box(object):
+    def __init__(self,x,y,w,h):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+
 class Player(Ship):
     last_shot = 0
     dead = False
@@ -160,6 +170,7 @@ class Player(Ship):
     def __init__(self):
         super(Player,self).__init__(GFX_DIR+'/player.png')     
         self.sound = pygame.mixer.Sound(SFX_DIR+'/player-explode.wav')
+        self.box = Box(self.x,self.y,self.w,self.h)
 
     def poll_keys(self):
         dx = 0
@@ -185,6 +196,13 @@ class Player(Ship):
                 shot.play_sound()
                 main.shots.append(shot)
 
+    def move_to(self,x,y,legal=True):
+        super(Player,self).move_to(x,y,legal)
+        self.box.x = self.x + self.w/4
+        self.box.y = self.y + self.h/4
+        self.box.w = self.w/2
+        self.box.h = self.h/2
+
     def die(self):
         self.sound.play()
         self.dead = True
@@ -192,7 +210,6 @@ class Player(Ship):
         main.shutdown_in(FPS * 4)
 #        main.shutdown_in(self.sound.get_length() * FPS)
             
-
 class Background(object):
     scroll_speed = 0.3
     yoff = 0
@@ -314,12 +331,12 @@ class Main(object):
             self.logic()
             self.tick += 1
             self.clock.tick(self.fps)
-            pygame.display.flip()
             
             self.screen = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT)).convert()
             self.draw()
             self.screen = pygame.transform.scale(self.screen,(DISPLAY_WIDTH,DISPLAY_HEIGHT))
             self.display.blit(self.screen,(0,0))
+            pygame.display.flip()
 
             if self.shutdown_tick > 0 and self.tick > self.shutdown_tick:
                 self.shutdown()
@@ -336,12 +353,12 @@ class Main(object):
         if not self.player.dead:
             for shot in self.shots:
                 if shot.enemy:
-                    shot.collide(self.player)
+                    shot.collide(self.player.box)
                 else:
                     for enemy in self.enemies:
                         shot.collide(enemy)
             for enemy in self.enemies:
-                enemy.collide(self.player)
+                enemy.collide(self.player.box)
 
         for shot in self.shots:
             shot.logic()
